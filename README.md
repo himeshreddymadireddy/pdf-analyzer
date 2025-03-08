@@ -55,3 +55,78 @@ A Streamlit-based application that analyzes PDF and PowerPoint documents using N
 1. Run application:
    ```bash
    streamlit run app.py
+   
+2. Open your browser and navigate to `http://localhost:8501`
+   
+3. Upload a PDF or PPT file.
+   
+4. Explore the summaries and ask questions about the document.
+
+---
+
+## Code Structure
+```bash
+  document-analyzer/
+├── app.py                # Main Streamlit application
+├── utils.py              # Document processing and AI utilities
+├── requirements.txt      # List of dependencies
+└── README.md             # Project documentation
+```
+
+## Api Integration
+- The project uses NVIDIA's DeepSeek R1 API for AI-powered document analysis. Here's how the API is integrated:
+```bash
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://integrate.api.nvidia.com/v1",
+    api_key="nvapi-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"  # Replace with your API key
+)
+
+completion = client.chat.completions.create(
+    model="deepseek-ai/deepseek-r1",
+    messages=[{"role": "user", "content": "Your question here"}],
+    temperature=0.6,
+    top_p=0.7,
+    max_tokens=4096,
+    stream=False  # Set to True for streaming responses
+)
+```
+## Example Workflow
+1. Upload a PDF or PPT file.
+   
+2. Get automatic summaries for each slide/page.
+ 
+3. Ask questions like:
+  - "What are the key points of slide 3?"
+  - "Explain the conclusion of the document."
+
+# Customization
+1. Change AI Model:
+  - Replace `deepseek-ai/deepseek-r1` with another model supported by NVIDIA.
+    
+2. Add Streaming:
+  - Set `stream=True` in the API call for real-time responses.
+    
+3. Enhance Security:
+  - Store the API key in environment variables or a `.env` file.
+## Troubleshooting
+1. API Key Issues:
+  - Ensure the API key is correct and has access to DeepSeek R1.
+  - Check NVIDIA's API usage limits.
+    
+2. Streaming Errors:
+  - If `stream=True` causes issues, set it to `False`.
+
+3. Rate Limits:
+   - Add retry logic for rate-limited requests:
+  ```bash
+     import time
+def query_deepseek(prompt, api_key, retries=3):
+    for _ in range(retries):
+        try:
+            return query_deepseek(prompt, api_key)
+        except Exception as e:
+            print(f"Error: {e}. Retrying...")
+            time.sleep(2)
+    return "Failed to generate response."
