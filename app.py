@@ -4,7 +4,7 @@ import streamlit as st
 from utils import process_pdf, process_ppt, chunk_text, query_deepseek
 
 # ========== Configuration ==========
-DEEPSEEK_API_KEY = "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"  # Replace with your NVIDIA API key
+DEEPSEEK_API_KEY = "nvapi-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"  # Replace with your NVIDIA API key
 
 # ========== Document Processing ==========
 def generate_summary(content, is_slide=True):
