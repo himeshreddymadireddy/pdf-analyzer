@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import inspect
 import os
+from hashlib import sha256
 from collections.abc import Mapping
 from dataclasses import asdict
 from typing import Any
@@ -21,6 +22,7 @@ from app_state import (
 )
 from providers import (
     CATALOG_ALIASES,
+    CredentialUnavailableError,
     GenerationRequest,
     GenerationResult,
     ProviderError,
@@ -117,10 +119,13 @@ def selected_token_budgets(primary_alias: str, secondary_alias: str | None, fall
 
 
 def _settings_payload(primary_alias: str, secondary_alias: str | None, fallback_enabled: bool, budgets: TokenBudgets | None = None) -> dict[str, Any]:
+    overrides = _session_overrides()
+    override_fingerprint = {k: sha256(v.encode("utf-8")).hexdigest()[:12] for k, v in sorted(overrides.items()) if v}
     return {
         "primary_model": primary_alias,
         "secondary_model": secondary_alias if fallback_enabled else None,
         "fallback_enabled": fallback_enabled,
+        "api_key_overrides": override_fingerprint,
         "budgets": repr(budgets) if budgets else None,
         "prompt_version": PROMPT_VERSION,
     }
@@ -216,8 +221,11 @@ def _get_generation_config(primary_alias: str, secondary_alias: str | None, fall
             streamlit_values=secrets,
             environ=os.environ,
         )
-    except ProviderError:
+    except CredentialUnavailableError:
         st.error("A primary credential is required before generation. Add a session override, Streamlit secret, or environment key.")
+        return None
+    except ProviderError as exc:
+        st.error(f"Configuration error: {exc}")
         return None
 
 
